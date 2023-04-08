@@ -3,7 +3,7 @@ import { useState,useRef } from "react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 const StudentsPdfs = () => {
-    const [pdfPath, setPdfDoc] = useState("");
+    const [pdfPath, setPdfDoc] = useState([]);
     const [pdfModFour, setpdfModFour] = useState([]);
   const [theme,settheme] = useState("")
   const [date,setdate] = useState("")
@@ -41,7 +41,7 @@ const StudentsPdfs = () => {
       
     });
 
-    firstPage.drawText(dates.join(" "), {
+    firstPage.drawText(dates.join(" / "), {
       x: 200,
       y: height-261,
       size: 10,
@@ -57,6 +57,7 @@ const StudentsPdfs = () => {
       font: helveticaFont,
       
     });
+
     let rowHeight =  height-293
     for(let i=0 ;i<students.length ;i++){
     rowHeight = rowHeight-40
@@ -65,40 +66,35 @@ const StudentsPdfs = () => {
         x:95,
         y: rowHeight,
         size: 10,
-        font: helveticaFont,
-        
+        font: helveticaFont,    
       }); 
       firstPage.drawText( students[i].studentLastName, {
         x:95,
         y: rowHeight+10,
         size: 10,
-        font: helveticaFont,
-        
+        font: helveticaFont,    
       });
       firstPage.drawText( students[i].cin, {
         x:190,
         y: rowHeight,
         size: 10,
-        font: helveticaFont,
-        
+        font: helveticaFont, 
       }); 
       firstPage.drawText( students[i].cnss, {
         x:260,
         y: rowHeight,
         size: 10,
         font: helveticaFont,
-        
+
       }); 
     }
 
-   
-   
     const pdfBytes = await pdfDoc.save();
     const bytes = new Uint8Array(pdfBytes);
     const blob = new Blob([bytes], { type: "application/pdf" });
     const docUrl = URL.createObjectURL(blob);
 
-    setPdfDoc(docUrl);
+    setPdfDoc((prev)=>[...prev,docUrl]);
   }
   const changeDate = (event)=>{
     setDates((prev)=>[...prev,event.target.value])
@@ -142,11 +138,9 @@ const StudentsPdfs = () => {
       x: 90,
       y: height-220,
       size: 10,
-      font: helveticaFont,
-      
+      font: helveticaFont, 
     });
-
-    firstPage.drawText(dates.join(' '), {
+    firstPage.drawText(dates[dates.length-1], {
       x: 75,
       y: height-740,
       size: 10,
@@ -205,6 +199,12 @@ const StudentsPdfs = () => {
    }
   }
 
+  const gerenrateConsultingDoc = async ()=>{
+   for(let student of students){
+    await generateFFourDoc(student)
+   }
+  }
+
   return (
     <div>
         <h1>Students data</h1>
@@ -238,11 +238,15 @@ const StudentsPdfs = () => {
       }
 
       <button onClick={injectStudentData}>Generate Pdf</button>
-
-      <iframe
-        src={pdfPath}
+{
+  pdfPath.map((path)=>{
+    return <iframe
+        src={path}
         style={{ width: "500px", height: "500px" }}
       ></iframe>
+  })
+}
+     
       <button onClick={generateStudentDocs}>Generate pdf Modéle F4</button>
       {
         pdfModFour.map((doc,index)=>{
